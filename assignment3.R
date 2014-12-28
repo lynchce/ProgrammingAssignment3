@@ -2,6 +2,9 @@
 
 best <- function(state, outcome) {
   ## Read outcome data
+  outcomes <- read.csv("outcome-of-care-measures.csv",  
+                       na.strings = "Not Available",
+                       stringsAsFactors=FALSE)
   
   ## Check that state and outcome are valid
   valid.states <- outcomes[,7]
@@ -48,24 +51,19 @@ best <- function(state, outcome) {
   }
   
   ## Get a logical vector of hospitals in a state
-  hospitals.in.state <- outcomes[,7] == state
-  outcomes.in.state <- outcomes[hospitals.in.state,]
-  ## Now we are only interested in the hospital name and data in question
-  data <- data.frame(outcomes.in.state[,2], outcomes.in.state[,num.outcome])
-  colnames(data) <- c("Hospital","Data")
-  data <- data[complete.cases(data),]
-  sorted.data <- data[order(Data),]
+  vars.to.keep <- c(2, 7, num.outcome)
+  data.to.sort <- outcomes[vars.to.keep]
+  data.to.sort <- data.to.sort[complete.cases(data.to.sort),]
+  hospitals.in.state <- data.to.sort[data.to.sort$State == state, ]
+  sorted.hospitals <- hospitals.in.state[order(hospitals.in.state[,3]),]
   
   ## Return hospital name in the state with lowest 30-day death rate
-  #attributes(outcomes.in.state)
-  print("Done")
-  sorted.data
+  best.hospital.name <- sorted.hospitals[1,1]
 }
 
 outcomes <- read.csv("outcome-of-care-measures.csv",  
                      na.strings = "Not Available",
                      stringsAsFactors=FALSE)
-head(outcomes)
 
 print("How many columns are present?")
 print(ncol(outcomes))
@@ -73,3 +71,6 @@ print(ncol(outcomes))
 ## Create a 30-day histogram death rates from heart attack (col 11)
 outcomes[,11] <- as.numeric(outcomes[,11])
 hist(outcomes[,11])
+
+best.result <- best("MD", "heart attack")
+print(best.result)
